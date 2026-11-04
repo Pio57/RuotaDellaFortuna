@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function Chat({ chat, unread, setUnread, host, up, onSend, teams, colors }) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState('t');
+  const [tab, setTab] = useState(host ? 'a' : 't');
   const [text, setText] = useState('');
   const log = useRef(null);
   const total = unread.t + unread.a;
@@ -33,6 +33,7 @@ export default function Chat({ chat, unread, setUnread, host, up, onSend, teams,
               </div>
             ))}
           </div>
+          {host && tab === 't' && <p className="muted hint">Qui leggi i messaggi di tutte le squadre. Per scrivere usa la scheda «Tutti».</p>}
           {!(host && tab === 't') && (
             <form onSubmit={submit}>
               <input value={text} maxLength={200} onChange={(e) => setText(e.target.value)} disabled={!up} aria-label="Scrivi un messaggio" autoComplete="off" />

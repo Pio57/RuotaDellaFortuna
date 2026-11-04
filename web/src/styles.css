@@ -143,3 +143,4 @@ button.opt:disabled { cursor: default; }
 .key.used { background: var(--tc); color: #fff; border-color: transparent; opacity: .55; text-decoration: line-through; }
 .solve label { display: block; margin-bottom: 6px; }
 .row.tight { gap: 4px; margin: 0; flex-wrap: nowrap; }
+.hint { margin: 0; padding: 8px 12px; border-top: 1px solid var(--line); }

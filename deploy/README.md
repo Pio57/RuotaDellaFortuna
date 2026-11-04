@@ -15,14 +15,14 @@ docker compose -f deploy/docker-compose.ip.yml up -d --build
 Apri la porta 3000 (`ufw allow 3000/tcp` e firewall del pannello Hostinger). Il sito è su `http://<IP del VPS>:3000`.
 Senza HTTPS il pulsante «Copia link» può non copiare: il link si legge a schermo e si manda a mano.
 
-## Opzione B: HTTPS con Traefik (template n8n di Hostinger)
+## Opzione B: HTTPS con il Traefik già presente sul VPS
 
 Serve un nome di dominio: un sottodominio DuckDNS, oppure il nome che Hostinger dà al VPS (tipo `srvXXXX.hstgr.cloud`,
 già puntato al VPS: si può usare quello senza creare nulla).
 
 ```bash
 git clone https://github.com/Pio57/RuotaDellaFortuna.git /opt/ruota-della-fortuna && cd /opt/ruota-della-fortuna
-cp deploy/.env.example deploy/.env && nano deploy/.env      # DOMAIN, TRAEFIK_NETWORK, CERT_RESOLVER
+cp deploy/.env.example deploy/.env && nano deploy/.env      # DOMAIN e CERT_RESOLVER (letsencrypt)
 docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
 ```
 Verifica: `https://<dominio>/health` risponde `{"status":"ok"}`; poi crea una sessione ed entra da due telefoni in 4G.

@@ -1,34 +1,25 @@
-# Chi è Pio? accanto al template "n8n" di Hostinger (Traefik già attivo in Docker, gestisce HTTPS).
-# Il container si unisce alla rete di Traefik e non pubblica porte sull'host.
+# Ruota della Fortuna dietro il Traefik già attivo sul VPS (Hostinger): HTTPS e certificato Let's Encrypt
+# li gestisce lui, con le etichette qui sotto. Traefik gira in modalità "host" (entrypoint web/websecure,
+# certresolver "letsencrypt"): raggiunge il container direttamente sul suo IP, quindi non servono reti esterne
+# né porte pubblicate.
 #
-#   git clone https://github.com/Pio57/RuotaDellaFortuna.git /opt/ruota-della-fortuna && cd /opt/ruota-della-fortuna
-#   cp deploy/.env.example deploy/.env      # poi compila DOMAIN e TRAEFIK_NETWORK
+#   cd /opt/ruota-della-fortuna
+#   cp deploy/.env.example deploy/.env      # DOMAIN = nome del VPS (es. srv1977305.hstgr.cloud) o altro dominio
 #   docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
-#
-# Nomi di rete, entrypoint e certresolver vanno verificati sul VPS:
-#   docker ps --format '{{.Names}}' | grep -i traefik
-#   docker inspect <container traefik> --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
-#   docker inspect <container traefik> --format '{{.Args}}'     # cerca certificatesresolvers / entrypoints
 services:
-  chi-e-pio:
+  ruota-della-fortuna:
     build: ..
-    container_name: chi-e-pio
+    container_name: ruota-della-fortuna
     restart: unless-stopped
     volumes:
-      - chi-e-pio-data:/data
+      - ruota-data:/data
     expose: ["3000"]
-    networks: [proxy]
     labels:
       - traefik.enable=true
-      - traefik.docker.network=${TRAEFIK_NETWORK}
-      - traefik.http.routers.chi-e-pio.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.chi-e-pio.entrypoints=websecure
-      - traefik.http.routers.chi-e-pio.tls=true
-      - traefik.http.routers.chi-e-pio.tls.certresolver=${CERT_RESOLVER:-mytlschallenge}
-      - traefik.http.services.chi-e-pio.loadbalancer.server.port=3000
+      - traefik.http.routers.ruota.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.ruota.entrypoints=websecure
+      - traefik.http.routers.ruota.tls=true
+      - traefik.http.routers.ruota.tls.certresolver=${CERT_RESOLVER:-letsencrypt}
+      - traefik.http.services.ruota.loadbalancer.server.port=3000
 volumes:
-  chi-e-pio-data:
-networks:
-  proxy:
-    external: true
-    name: ${TRAEFIK_NETWORK}
+  ruota-data:

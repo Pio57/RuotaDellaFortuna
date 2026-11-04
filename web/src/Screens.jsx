@@ -99,6 +99,7 @@ function lastAction(la, st) {
     case 'miss': return `${who}: la ${la.l} non c’è`;
     case 'solve': return `${who} ha risolto la frase! (+${la.pts} ${SPRITZ})`;
     case 'complete': return `${who} ha scoperto l’ultima lettera! (+${la.pts} ${SPRITZ})`;
+    case 'bankrupt': return `${who}: BANCAROTTA! Perde ${la.lost} ${SPRITZ} e il turno`;
     case 'pass': return `${who}: la ruota dice Passa!`;
     case 'fail': return `${who}: la frase non è questa`;
     case 'timeout': return `${who}: tempo scaduto`;
@@ -115,7 +116,7 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, ho
   const captainId = st.cap[st.turn];
   const captain = st.p.find((p) => p[0] === captainId);
   const mine = !host && captainId === pid;
-  const labels = st.tw.map((v) => (v ? `${v} spritz` : 'Passa'));
+  const labels = st.tw.map((v) => (v > 0 ? `${v} spritz` : v === 0 ? 'Passa' : 'Bancarotta'));
   const sp = st.sp ? { id: st.sp.id, tg: st.sp.tg, jt: st.sp.jt, l: labels } : { id: 0, tg: 0, jt: 0, l: labels };
   const canPick = mine && up && st.sp && st.sp.v > 0 && ready;
   const used = new Map(st.called.map((c) => [c[0], c[1]]));

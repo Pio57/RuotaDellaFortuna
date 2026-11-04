@@ -199,3 +199,21 @@ test('«Passa»: nessuna lettera, il turno cambia a giro finito', () => {
   assert.equal(s.la.kind, 'pass');
   assert.equal(s.spin, null);
 });
+
+test('«Bancarotta»: si perdono gli spritz del round e il turno, a giro finito', () => {
+  const s = mk(3);
+  G.startRound(s);
+  spin(s, 5);
+  G.guess(s, 'p0', 'i'); // +15
+  assert.equal(s.scores[0], 15);
+  assert.ok(G.spinTurn(s, 'p0', () => 0.99).ok); // ultimo spicchio
+  assert.equal(s.spin.val, -1);
+  assert.ok(G.guess(s, 'p0', 'e').err);
+  assert.equal(s.scores[0], 15); // per ora non cambia: il giro è in corso
+  s.el = G.PASS_DELAY;
+  assert.ok(G.passIfDue(s));
+  assert.equal(s.scores[0], 0);
+  assert.equal(s.la.kind, 'bankrupt');
+  assert.equal(s.la.lost, 15);
+  assert.equal(s.turn, 1);
+});

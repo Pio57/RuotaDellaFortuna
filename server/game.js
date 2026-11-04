@@ -9,8 +9,9 @@
 export const TEAMS = ['Irpini', 'Scozzesi', 'Romani'];
 export const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const SECS_OPTIONS = [15, 30, 45, 60, 90];
-// Ruota del turno: 0 = «Passa» (si perde il turno). I punteggi sono in spritz.
-export const TURN_WHEEL = [3, 5, 8, 2, 0, 10];
+// Ruota del turno: 0 = «Passa» (si perde il turno), -1 = «Bancarotta» (si perde il turno e gli spritz
+// guadagnati nel round). I punteggi sono in spritz.
+export const TURN_WHEEL = [3, 5, 8, 2, 0, 10, -1];
 export const SOLVE_BONUS = 30;
 export const HIDDEN_BONUS = 3;
 export const PASS_DELAY = 7; // secondi di attesa dopo «Passa», il tempo del giro
@@ -186,7 +187,7 @@ export function guess(s, pid, l) {
   const err = gate(s, pid);
   if (err) return { err };
   if (!s.spin) return { err: 'Gira prima la ruota.' };
-  if (!s.spin.val) return { err: 'La ruota ha detto «Passa».' };
+  if (s.spin.val <= 0) return { err: s.spin.val < 0 ? 'La ruota ha detto «Bancarotta».' : 'La ruota ha detto «Passa».' };
   const ch = typeof l === 'string' ? Array.from(l.trim()) : [];
   if (ch.length !== 1 || !LETTER.test(ch[0])) return { err: 'Lettera non valida.' };
   const b = base(ch[0]);
@@ -235,10 +236,16 @@ export function spinTurn(s, pid, rnd) {
   return { ok: true };
 }
 
-// Dopo «Passa» il turno cambia quando il giro è finito.
+// Dopo «Passa» o «Bancarotta» il turno cambia quando il giro è finito.
 export function passIfDue(s) {
-  if (s.ph !== 'q' || !s.spin || s.spin.val || s.el - s.spin.at < PASS_DELAY) return false;
-  s.la = { team: s.turn, kind: 'pass' };
+  if (s.ph !== 'q' || !s.spin || s.spin.val > 0 || s.el - s.spin.at < PASS_DELAY) return false;
+  const team = s.turn;
+  if (s.spin.val < 0) {
+    const lost = s.gain[team];
+    s.scores[team] -= lost;
+    s.gain[team] = 0;
+    s.la = { team, kind: 'bankrupt', lost };
+  } else s.la = { team, kind: 'pass' };
   passTurn(s);
   return true;
 }

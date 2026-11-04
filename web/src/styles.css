@@ -20,8 +20,9 @@ h1, h2, h3 { font-family: var(--head); font-weight: 700; margin: 0 0 8px; letter
 .muted { color: var(--muted); }
 
 .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; }
-.top h1 { margin: 0; font-size: 2.2rem; color: var(--gold); text-shadow: 0 2px 0 var(--gold-2), 0 4px 10px rgba(0, 0, 0, .5); }
-.top h1 span { color: #fff; }
+.top h1 { margin: 0; font-size: 2rem; text-shadow: 0 2px 0 var(--gold-2), 0 4px 10px rgba(0, 0, 0, .5); }
+.top h1 span { color: var(--gold); }
+.top h1 { color: #fff; line-height: 1; }
 .badge { font-family: var(--head); font-weight: 700; text-transform: uppercase; padding: 4px 10px; border: 2px solid var(--line); background: var(--panel); }
 .badge.off { background: #c0392b; border-color: #c0392b; }
 
@@ -195,3 +196,4 @@ button.opt:disabled { cursor: default; }
 .voucher strong { font-family: var(--head); font-size: 1.6rem; text-transform: uppercase; color: #7dffb0; }
 .voucher-prize { font-family: var(--head); font-weight: 700; font-size: 2.4rem; line-height: 1.05; text-transform: uppercase; color: var(--gold); }
 .voucher small { color: var(--muted); }
+@media (max-width: 480px) { .top h1 { font-size: 1.3rem; } .top { flex-wrap: wrap; } }

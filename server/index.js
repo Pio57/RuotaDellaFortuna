@@ -70,7 +70,7 @@ export function createServer({ port = Number(process.env.PORT) || 3000, host = p
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const srv = await createServer();
-  console.log(`Chi è Pio? in ascolto su porta ${srv.port}`);
+  console.log(`Ruota della Fortuna in ascolto su porta ${srv.port}`);
   const bye = () => srv.close().then(() => process.exit(0));
   process.on('SIGTERM', bye);
   process.on('SIGINT', bye);

@@ -159,7 +159,7 @@ export default function App() {
   return (
     <div className={`app${proj && host ? ' proj' : ''}`}>
       <header className="top">
-        <h1><span>Chi è</span> Pio?</h1>
+        <h1>Ruota della <span>Fortuna</span></h1>
         <div className="row">
           {st && role !== 'none' && <span className="badge" style={me ? { borderColor: COLORS[me[2]] } : undefined}>{host ? `Host · ${st.c}` : me ? `${st.cap[me[2]] === pid ? '★ ' : ''}${TEAMS[me[2]]} · ${st.c}` : st.c}</span>}
           {host && <button className="btn sm" type="button" onClick={() => setProj(!proj)}>Proiettore</button>}

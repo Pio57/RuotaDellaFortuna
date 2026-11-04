@@ -144,6 +144,7 @@ export function startRound(s) {
   s.called = [];
   s.gain = [0, 0, 0];
   s.la = null;
+  s.hold = 0;
   s.spin = null;
   s.rv = null;
   s.phrase = r.bd.toLocaleUpperCase('it');
@@ -164,6 +165,7 @@ export function board(s) {
 function passTurn(s) {
   s.turn = nextLive(s, s.turn + 1);
   s.el = 0;
+  s.hold = 0;
   s.spin = null;
 }
 
@@ -200,11 +202,12 @@ export function guess(s, pid, l) {
     s.scores[team] += pts;
     s.gain[team] += pts;
     s.el = 0;
+    s.hold = 0;
     s.spin = null; // dopo ogni lettera giusta si rigira
-    s.la = { team, kind: 'hit', l: b, n, pts };
+    s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'hit', l: b, n, pts };
     if (hiddenCount(s) === 0) { s.la.kind = 'complete'; finish(s, team, SOLVE_BONUS); }
   } else {
-    s.la = { team, kind: 'miss', l: b, n: 0, pts: 0 };
+    s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'miss', l: b, n: 0, pts: 0 };
     passTurn(s);
   }
   return { ok: true };
@@ -217,10 +220,10 @@ export function solve(s, pid, attempt) {
   const team = s.turn;
   if (lettersOf(attempt) === lettersOf(s.phrase)) {
     const bonus = SOLVE_BONUS + HIDDEN_BONUS * hiddenCount(s);
-    s.la = { team, kind: 'solve', pts: bonus };
+    s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'solve', pts: bonus };
     finish(s, team, bonus);
   } else {
-    s.la = { team, kind: 'fail' };
+    s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'fail' };
     passTurn(s);
   }
   return { ok: true };
@@ -233,6 +236,7 @@ export function spinTurn(s, pid, rnd) {
   const tg = Math.floor(rnd() * TURN_WHEEL.length);
   s.sid++;
   s.spin = { id: s.sid, tg, jt: Math.round(rnd() * 36) - 18, val: TURN_WHEEL[tg], at: s.el };
+  if (s.spin.val > 0) { s.el = 0; s.spin.at = 0; s.hold = PASS_DELAY; } // il timer riparte da capo a ruota ferma
   return { ok: true };
 }
 
@@ -244,14 +248,23 @@ export function passIfDue(s) {
     const lost = s.gain[team];
     s.scores[team] -= lost;
     s.gain[team] = 0;
-    s.la = { team, kind: 'bankrupt', lost };
-  } else s.la = { team, kind: 'pass' };
+    s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'bankrupt', lost };
+  } else s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'pass' };
   passTurn(s);
   return true;
 }
 
+// Un secondo di gioco. Il timer del turno resta fermo mentre la ruota gira (s.hold).
+// Ritorna true se è cambiato qualcosa che va inviato (turno scaduto, Passa/Bancarotta).
+export function tick(s) {
+  if (s.hold > 0) { s.hold--; return false; }
+  s.el++;
+  if (s.el >= s.set.secs) { timeoutTurn(s); return true; }
+  return passIfDue(s);
+}
+
 export function timeoutTurn(s) {
-  s.la = { team: s.turn, kind: 'timeout' };
+  s.la = { id: (s.lid = (s.lid || 0) + 1), team: s.turn, kind: 'timeout' };
   passTurn(s);
 }
 

@@ -105,15 +105,8 @@ export class Manager {
   tickAll() {
     for (const s of this.sessions.values()) {
       if (s.ph !== 'q') continue;
-      s.el++;
       s.lastActivity = this.now();
-      if (s.el >= s.set.secs) {
-        G.timeoutTurn(s);
-        G.bump(s);
-        this.sendStates(s);
-        continue;
-      }
-      if (G.passIfDue(s)) { G.bump(s); this.sendStates(s); continue; }
+      if (G.tick(s)) { G.bump(s); this.sendStates(s); continue; }
       const m = { t: 'tick', r: s.set.secs - s.el, b: G.board(s) };
       this.clients.get(s.code)?.forEach((c) => c.send(m));
     }

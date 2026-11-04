@@ -217,3 +217,28 @@ test('«Bancarotta»: si perdono gli spritz del round e il turno, a giro finito'
   assert.equal(s.la.lost, 15);
   assert.equal(s.turn, 1);
 });
+
+test('timer del turno: fermo mentre la ruota gira, poi riparte da capo', () => {
+  const s = mk(3);
+  G.startRound(s);
+  for (let i = 0; i < 20; i++) G.tick(s); // 20 s per decidere
+  assert.equal(s.el, 20);
+  assert.ok(G.spinTurn(s, 'p0', () => 0.5).ok); // 2 spritz
+  assert.equal(s.el, 0);
+  for (let i = 0; i < G.PASS_DELAY; i++) G.tick(s); // giro in corso: tempo fermo
+  assert.equal(s.el, 0);
+  G.tick(s);
+  assert.equal(s.el, 1);
+});
+
+test('i popup ricevono un id nuovo a ogni evento', () => {
+  const s = mk(3);
+  G.startRound(s);
+  spin(s);
+  G.guess(s, 'p0', 'i');
+  const first = s.la.id;
+  spin(s);
+  G.guess(s, 'p0', 'e');
+  assert.ok(s.la.id > first);
+  assert.equal(G.snapshot(s, 'p0').la.id, s.la.id);
+});

@@ -134,7 +134,7 @@ export function Scoreboard({ st, pid }) {
   );
 }
 
-export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, hostSend }) {
+export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, onSpinResult, hostSend }) {
   const [attempt, setAttempt] = useState('');
   const [ready, setReady] = useState(false);
   const spinId = st.sp ? st.sp.id : 0;
@@ -164,7 +164,7 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, ho
         <span>{mine ? (st.sp ? (canPick ? 'Capitano: scegli una lettera.' : 'La ruota gira…') : 'Capitano: premi la ruota per girare.') : captain ? `Capitano: ${captain[1]}` : ''}</span>
       </div>
       {msg && <div className="la" style={{ '--tc': COLORS[st.la.team] }} aria-live="polite">{msg}</div>}
-      <Wheel w={sp} variant="turn" idle={!st.sp} onDone={() => setReady(true)}
+      <Wheel w={sp} variant="turn" idle={!st.sp} onDone={() => { setReady(true); if (st.sp) onSpinResult(st.sp.v, st.turn, mine); }}
         onPress={mine && !st.sp && up ? onSpin : undefined} pressLabel="Premi per girare" />
       {!st.sp && !mine && <p className="muted center">{captain ? `${captain[1]} deve girare la ruota…` : 'In attesa della ruota…'}</p>}
       {(!mine || canPick) && <div className="keys" role="group" aria-label="Lettere">
@@ -203,8 +203,14 @@ function Standings({ st }) {
 
 export function Reveal({ st, host, hostSend }) {
   const by = st.rv.by;
+  const last = st.ri + 1 >= st.n;
   return (
     <>
+      <div className="next-bar">
+        {host
+          ? <button className="btn gold big-btn" type="button" onClick={() => hostSend('host:next')}>{last ? 'Fine partita' : 'Round successivo ▶'}</button>
+          : <p className="muted center">{last ? 'In attesa che Pio chiuda la partita…' : 'In attesa che Pio passi al round successivo…'}</p>}
+      </div>
       <div className="question">{st.q.t}</div>
       <div className="panel">
         <h2>{by >= 0 ? `${TEAMS[by]} ha risolto il round` : 'Round chiuso'}</h2>
@@ -216,7 +222,6 @@ export function Reveal({ st, host, hostSend }) {
         {st.rv.an && <p>{st.rv.an}</p>}
       </div>
       <div className="panel"><h2>Classifica</h2><Standings st={st} /></div>
-      {host && <button className="btn gold" type="button" onClick={() => hostSend('host:next')}>{st.ri + 1 < st.n ? 'Round successivo' : 'Fine partita'}</button>}
     </>
   );
 }

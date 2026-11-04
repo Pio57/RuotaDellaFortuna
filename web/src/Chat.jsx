@@ -25,6 +25,7 @@ export default function Chat({ chat, unread, setUnread, host, up, onSend, teams,
           <div className="tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === 't'} onClick={() => setTab('t')}>Squadra{unread.t ? ` (${unread.t})` : ''}</button>
             <button type="button" role="tab" aria-selected={tab === 'a'} onClick={() => setTab('a')}>Tutti{unread.a ? ` (${unread.a})` : ''}</button>
+            <button type="button" className="close" aria-label="Chiudi la chat" onClick={() => setOpen(false)}>✕</button>
           </div>
           <div className="log" role="log" aria-live="polite" aria-label="Messaggi" ref={log}>
             {chat[tab].map((m, i) => (

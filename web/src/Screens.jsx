@@ -3,7 +3,7 @@ import Wheel from './Wheel.jsx';
 
 const SPRITZ = '🍹';
 
-export const TEAMS = ['Irpini', 'Scozzesi', 'Romani'];
+export const TEAMS = ['Squadra verde', 'Squadra blu', 'Squadra rossa'];
 export const COLORS = ['#34d27b', '#5aa9ff', '#ff7a45'];
 
 export function Entry({ onJoin, onCreate, onResume, canResume, error, initialCode }) {
@@ -226,31 +226,41 @@ export function Reveal({ st, host, hostSend }) {
   );
 }
 
-export function End({ st, host, hostSend }) {
-  const title = st.win.length ? `${st.win.length > 1 ? 'Pari merito: ' : 'Vince '}${st.win.map((t) => TEAMS[t]).join(', ')}` : 'Partita finita';
+// Finale: classifica, ruota dei premi (la gira il capitano della squadra vincitrice) e riscatto del premio.
+export function Final({ st, host, pid, up, hostSend, onSpin, onClaim }) {
+  const [ready, setReady] = useState(false);
+  const spinId = st.w ? st.w.id : 0;
+  useEffect(() => { setReady(false); }, [spinId]);
+  const me = st.p.find((p) => p[0] === pid);
+  const mine = !!me && st.win.includes(me[2]);
+  const winCaps = st.win.map((t) => st.p.find((p) => p[0] === st.cap[t])).filter(Boolean);
+  const iAmCap = !host && winCaps.some((c) => c[0] === pid);
+  const w = st.w || { id: 0, tg: 0, jt: 0, l: st.pw };
+  const title = st.win.length ? `${st.win.length > 1 ? 'Pari merito: ' : 'Vince la '}${st.win.map((t) => TEAMS[t].toLowerCase()).join(', ')}` : 'Partita finita';
   return (
     <>
       <div className="panel"><div className="big">{title}</div><Standings st={st} /></div>
-      {host && (
-        <div className="row">
-          <button className="btn gold" type="button" onClick={() => hostSend('host:spin')}>Gira la ruota</button>
-          <button className="btn" type="button" onClick={() => hostSend('host:reset')}>Nuova partita</button>
+      <Wheel w={w} winners={st.win} teams={TEAMS} idle={!st.w} onDone={() => setReady(true)}
+        onPress={iAmCap && !st.w && up ? onSpin : undefined} pressLabel="Premi per girare" />
+      {!st.w && !iAmCap && (
+        <p className="muted center">{winCaps.length ? `${winCaps.map((c) => c[1]).join(' o ')} deve girare la ruota dei premi…` : 'In attesa della ruota dei premi…'}</p>
+      )}
+      {st.w && ready && mine && !st.w.cl && (
+        <button className="btn gold big-btn" type="button" disabled={!up} onClick={onClaim}>Riscatta il premio</button>
+      )}
+      {st.w && ready && !mine && !st.w.cl && <p className="muted center">{host ? 'In attesa che i vincitori riscattino il premio…' : 'Il premio spetta alla squadra vincitrice.'}</p>}
+      {st.w && st.w.cl && (
+        <div className="panel voucher">
+          <strong>✔ Premio riscattato</strong>
+          <span className="voucher-prize">{st.w.l[st.w.tg]}</span>
+          <span>da {st.w.cl.name} ({TEAMS[st.w.cl.team]})</span>
+          <small>{mine || host ? 'Mostra questa schermata a Pio per ritirare il premio.' : ''}</small>
         </div>
       )}
-    </>
-  );
-}
-
-export function WheelScreen({ st, host, hostSend }) {
-  const [busy, setBusy] = useState(true);
-  useEffect(() => { setBusy(true); }, [st.w.id]);
-  return (
-    <>
-      <Wheel w={st.w} winners={st.win} teams={TEAMS} onDone={() => setBusy(false)} />
-      <ul className="prizes">{st.w.l.map((l, i) => <li key={i}>{i + 1}. {l}</li>)}</ul>
       {host && (
         <div className="row">
-          <button className="btn gold" type="button" disabled={busy} onClick={() => hostSend('host:spin')}>Gira ancora</button>
+          {st.w && <button className="btn" type="button" disabled={!ready} onClick={() => hostSend('host:spin')}>Gira ancora</button>}
+          {!st.w && <button className="btn" type="button" onClick={() => hostSend('host:spin')}>Gira la ruota (host)</button>}
           <button className="btn" type="button" onClick={() => hostSend('host:reset')}>Nuova partita</button>
         </div>
       )}

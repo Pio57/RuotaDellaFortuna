@@ -5,7 +5,7 @@ import Chat from './Chat.jsx';
 import Editor from './Editor.jsx';
 const SPRITZ = '🍹';
 
-import { Entry, Lobby, Question, Reveal, End, WheelScreen, TEAMS, COLORS } from './Screens.jsx';
+import { Entry, Lobby, Question, Reveal, Final, TEAMS, COLORS } from './Screens.jsx';
 
 const get = (s, k) => { try { return JSON.parse(s.getItem(k)); } catch { return null; } };
 const put = (s, k, v) => { try { s.setItem(k, JSON.stringify(v)); } catch { /* storage non disponibile */ } };
@@ -124,7 +124,7 @@ export default function App() {
     if (la.kind === 'hit') pop({ tone: 'good', title: `+${la.pts} ${SPRITZ}`, text: `${who}: la ${la.l} c’è ${la.n} ${la.n > 1 ? 'volte' : 'volta'}` }, 2500);
     else if (la.kind === 'solve' || la.kind === 'complete') {
       const total = st.rv ? st.rv.tr[la.team] : la.pts;
-      pop({ tone: 'win', title: mineTeam ? 'Bravissimi, avete vinto!' : `Bravi ${who}, hanno indovinato!`, text: `${mineTeam ? 'La tua squadra ha' : who + ' ha'} guadagnato ${total} ${SPRITZ} in questo round` }, 5000);
+      pop({ tone: 'win', title: mineTeam ? 'Bravissimi, avete vinto!' : `${who} ha indovinato la frase!`, text: `${mineTeam ? 'La tua squadra ha' : who + ' ha'} guadagnato ${total} ${SPRITZ} in questo round` }, 5000);
     } else if (la.kind === 'bankrupt') pop({ tone: 'bad', title: 'Bancarotta!', text: `${who} perde ${la.lost} ${SPRITZ} e il turno` }, 3500);
   }, [laId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -154,8 +154,7 @@ export default function App() {
   } else if (st.ph === 'lobby') body = <Lobby st={st} host={host} pid={pid} hostSend={hostSend} onEdit={() => setEditing(true)} toast={toast} />;
   else if (st.ph === 'q') body = <Question st={st} tick={tick} host={host} pid={pid} up={up} hostSend={hostSend} onGuess={(l) => net.current.send({ t: 'guess', l })} onSolve={(a) => net.current.send({ t: 'solve', a })} onSpin={() => net.current.send({ t: 'spin' })} onSpinResult={onSpinResult} />;
   else if (st.ph === 'rev') body = <Reveal st={st} host={host} hostSend={hostSend} />;
-  else if (st.ph === 'end') body = <End st={st} host={host} hostSend={hostSend} />;
-  else body = <WheelScreen st={st} host={host} hostSend={hostSend} />;
+  else body = <Final st={st} host={host} pid={pid} up={up} hostSend={hostSend} onSpin={() => net.current.send({ t: 'spin' })} onClaim={() => net.current.send({ t: 'claim' })} />;
 
   return (
     <div className={`app${proj && host ? ' proj' : ''}`}>

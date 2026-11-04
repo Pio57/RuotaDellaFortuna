@@ -242,3 +242,19 @@ test('i popup ricevono un id nuovo a ogni evento', () => {
   assert.ok(s.la.id > first);
   assert.equal(G.snapshot(s, 'p0').la.id, s.la.id);
 });
+
+test('finale: la ruota la gira il capitano della squadra vincitrice, il premio si riscatta una volta', () => {
+  const s = mk(6);
+  s.ph = 'end';
+  s.win = [1];
+  assert.ok(G.finalSpin(s, 'p0', rnd).err); // squadra 0, non vincitrice
+  assert.ok(G.finalSpin(s, 'p4', rnd).err); // squadra 1 ma non capitano
+  assert.ok(G.finalSpin(s, 'p1', rnd).ok);
+  assert.equal(s.ph, 'wheel');
+  assert.equal(s.w.tg, 2); // rig: il caffè
+  assert.ok(G.finalSpin(s, 'p1', rnd).err); // una volta sola
+  assert.ok(G.claim(s, 'p0').err); // non vincitrice
+  assert.ok(G.claim(s, 'p4').ok); // qualunque membro della squadra vincitrice
+  assert.equal(G.snapshot(s, 'p0').w.cl.name, 'Nome4');
+  assert.ok(G.claim(s, 'p1').err); // già riscattato
+});

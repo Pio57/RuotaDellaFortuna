@@ -6,7 +6,7 @@
 // se non c'è, il turno passa. Il capitano può anche tentare di risolvere la frase:
 // se indovina il round finisce con un bonus, altrimenti il turno passa. Il tempo (set.secs) è per turno.
 
-export const TEAMS = ['Irpini', 'Scozzesi', 'Romani'];
+export const TEAMS = ['Squadra verde', 'Squadra blu', 'Squadra rossa'];
 export const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const SECS_OPTIONS = [15, 30, 45, 60, 90];
 // Ruota del turno: 0 = «Passa» (si perde il turno), -1 = «Bancarotta» (si perde il turno e gli spritz
@@ -295,9 +295,29 @@ export function spin(s, rnd) {
   if (tg < 0) tg = Math.floor(rnd() * 6);
   const jt = Math.round(rnd() * 36) - 18;
   s.wid++;
-  s.w = { tg, jt, id: s.wid };
+  s.w = { tg, jt, id: s.wid, cl: null };
   s.ph = 'wheel';
   return true;
+}
+
+// Finale: la ruota dei premi la gira il capitano di una squadra vincitrice, una volta sola.
+export function finalSpin(s, pid, rnd) {
+  if (s.ph !== 'end') return { err: 'La ruota è già stata girata.' };
+  const p = s.players.find((x) => x.pid === pid);
+  if (!p || !s.win.includes(p.team)) return { err: 'La ruota tocca alla squadra vincitrice.' };
+  if (s.captains[p.team] !== pid) return { err: 'Solo il capitano può girare la ruota.' };
+  spin(s, rnd);
+  return { ok: true };
+}
+
+// Riscatto del premio: un membro di una squadra vincitrice, una volta sola.
+export function claim(s, pid) {
+  if (s.ph !== 'wheel' || !s.w) return { err: 'Nessun premio da riscattare.' };
+  const p = s.players.find((x) => x.pid === pid);
+  if (!p || !s.win.includes(p.team)) return { err: 'Il premio spetta alla squadra vincitrice.' };
+  if (s.w.cl) return { err: 'Il premio è già stato riscattato.' };
+  s.w.cl = { name: displayNames(s)[pid], team: p.team };
+  return { ok: true };
 }
 
 export function reset(s) {
@@ -341,8 +361,8 @@ export function snapshot(s, viewerPid) {
     out.sp = s.spin ? { id: s.spin.id, tg: s.spin.tg, jt: s.spin.jt, v: s.spin.val } : null;
   }
   if (s.ph === 'rev') out.rv = s.rv;
-  if (s.ph === 'end' || s.ph === 'wheel') out.win = s.win;
-  if (s.ph === 'wheel') out.w = { l: s.set.wheel.slice(), tg: s.w.tg, id: s.w.id, jt: s.w.jt };
+  if (s.ph === 'end' || s.ph === 'wheel') { out.win = s.win; out.pw = s.set.wheel.slice(); }
+  if (s.ph === 'wheel') out.w = { l: s.set.wheel.slice(), tg: s.w.tg, id: s.w.id, jt: s.w.jt, cl: s.w.cl || null };
   if (host) { out.h = 1; out.cfg = { rounds: s.rounds, set: s.set }; }
   return out;
 }

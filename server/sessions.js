@@ -125,6 +125,7 @@ export class Manager {
     switch (msg.t) {
       case 'ping': conn.send({ t: 'pong' }); return;
       case 'join': return this.join(conn, msg);
+      case 'claim': return this.claim(conn);
       case 'spin':
       case 'guess':
       case 'solve': return this.play(conn, msg);
@@ -193,11 +194,23 @@ export class Manager {
     const s = this.session(conn);
     if (!s || conn.host || !conn.pid) return;
     let res;
-    if (msg.t === 'spin') res = G.spinTurn(s, conn.pid, this.rnd);
+    if (msg.t === 'spin' && s.ph !== 'q') res = G.finalSpin(s, conn.pid, this.rnd);
+    else if (msg.t === 'spin') res = G.spinTurn(s, conn.pid, this.rnd);
     else if (msg.t === 'guess') res = G.guess(s, conn.pid, msg.l);
     else res = G.solve(s, conn.pid, V.clean(msg.a, 36));
     if (res.err) return this.err(conn, 'bad_input', res.err);
+    if (s.ph === 'wheel') this.save();
     if (s.ph === 'rev') { this.log(s.code, 'round_end', s.players.length); this.save(); }
+    this.touch(s);
+  }
+
+  claim(conn) {
+    const s = this.session(conn);
+    if (!s || conn.host || !conn.pid) return;
+    const res = G.claim(s, conn.pid);
+    if (res.err) return this.err(conn, 'bad_input', res.err);
+    this.log(s.code, 'prize_claimed', s.players.length);
+    this.save();
     this.touch(s);
   }
 

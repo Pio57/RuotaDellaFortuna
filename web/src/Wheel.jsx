@@ -17,13 +17,20 @@ function wrap(text, width = 13, max = 3) {
 }
 
 // Ruota a 6 spicchi con bulbi sul bordo; l'angolo finale arriva già calcolato dal server (tg, jt).
-export default function Wheel({ w, winners, teams, onDone, variant = 'prize' }) {
+export default function Wheel({ w, winners, teams, onDone, variant = 'prize', idle = false, onPress, pressLabel = 'Gira' }) {
   const rotor = useRef(null);
   const last = useRef(null);
   const [spinning, setSpinning] = useState(false);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    if (idle) {
+      // ruota ferma in attesa del giro: torna in posizione e ripulisce lo stato
+      last.current = null;
+      setSpinning(false); setDone(false);
+      if (rotor.current) { rotor.current.style.transition = 'none'; rotor.current.style.transform = 'rotate(0deg)'; }
+      return undefined;
+    }
     if (last.current === w.id) return undefined;
     last.current = w.id;
     setSpinning(true); setDone(false);
@@ -37,13 +44,14 @@ export default function Wheel({ w, winners, teams, onDone, variant = 'prize' }) 
     el.style.transform = `rotate(${angle}deg)`;
     const t = setTimeout(() => { setSpinning(false); setDone(true); onDone?.(); }, dur + 100);
     return () => clearTimeout(t);
-  }, [w.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [w.id, idle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const label = `Ruota con 6 premi: ${w.l.map((l, i) => `${i + 1} ${l}`).join(', ')}`;
   return (
     <div className="wheel-stage">
       <div className={`wheelbox${spinning ? ' spinning' : ''}${variant === 'turn' ? ' compact' : ''}`}>
         <div className="flapper" />
+        {onPress && <button className="spin-hub" type="button" onClick={onPress}>{pressLabel}</button>}
         <svg viewBox="0 0 320 320" role="img" aria-label={label}>
           <circle cx="160" cy="160" r="158" fill="#7a5a00" />
           <circle cx="160" cy="160" r="154" fill="url(#gold)" />

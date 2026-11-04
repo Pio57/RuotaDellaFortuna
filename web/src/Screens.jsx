@@ -115,7 +115,8 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, ho
   const captainId = st.cap[st.turn];
   const captain = st.p.find((p) => p[0] === captainId);
   const mine = !host && captainId === pid;
-  const sp = st.sp && { id: st.sp.id, tg: st.sp.tg, jt: st.sp.jt, l: st.tw.map((v) => (v ? `${v} spritz` : 'Passa')) };
+  const labels = st.tw.map((v) => (v ? `${v} spritz` : 'Passa'));
+  const sp = st.sp ? { id: st.sp.id, tg: st.sp.tg, jt: st.sp.jt, l: labels } : { id: 0, tg: 0, jt: 0, l: labels };
   const canPick = mine && up && st.sp && st.sp.v > 0 && ready;
   const used = new Map(st.called.map((c) => [c[0], c[1]]));
   const msg = lastAction(st.la, st);
@@ -132,14 +133,13 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, ho
       <div className="question">{st.q.t}</div>
       <div className="turn" style={{ '--tc': COLORS[st.turn] }} role="status" aria-live="polite">
         <strong>Tocca a {TEAMS[st.turn]}</strong>
-        <span>{mine ? (st.sp ? 'Capitano: scegli una lettera.' : 'Capitano: gira la ruota.') : captain ? `Capitano: ${captain[1]}` : ''}</span>
+        <span>{mine ? (st.sp ? (canPick ? 'Capitano: scegli una lettera.' : 'La ruota gira…') : 'Capitano: premi la ruota per girare.') : captain ? `Capitano: ${captain[1]}` : ''}</span>
       </div>
       {msg && <div className="la" style={{ '--tc': COLORS[st.la.team] }} aria-live="polite">{msg}</div>}
-      {sp && <Wheel w={sp} variant="turn" onDone={() => setReady(true)} />}
-      {mine && !st.sp && (
-        <button className="btn gold big-btn" type="button" disabled={!up} onClick={onSpin}>Gira la ruota</button>
-      )}
-      <div className="keys" role="group" aria-label="Lettere">
+      <Wheel w={sp} variant="turn" idle={!st.sp} onDone={() => setReady(true)}
+        onPress={mine && !st.sp && up ? onSpin : undefined} pressLabel="Premi per girare" />
+      {!st.sp && !mine && <p className="muted center">{captain ? `${captain[1]} deve girare la ruota…` : 'In attesa della ruota…'}</p>}
+      {(!mine || canPick) && <div className="keys" role="group" aria-label="Lettere">
         {KEYS.map((k) => {
           const by = used.get(k);
           return (
@@ -147,7 +147,7 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, ho
               disabled={!canPick || by !== undefined} onClick={() => onGuess(k)}>{k}</button>
           );
         })}
-      </div>
+      </div>}
       {mine && (
         <form className="panel solve" onSubmit={submit}>
           <label htmlFor="solve">Sai la frase? Prova a risolverla (se sbagli perdi il turno)</label>

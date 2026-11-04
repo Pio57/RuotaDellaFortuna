@@ -107,6 +107,33 @@ function lastAction(la, st) {
   }
 }
 
+// Classifica con la squadra in testa e i nomi di ogni squadra (★ = capitano, ▶ = di turno).
+export function Scoreboard({ st, pid }) {
+  const max = Math.max(...st.sc);
+  const order = [0, 1, 2].sort((x, y) => st.sc[y] - st.sc[x] || x - y);
+  return (
+    <div className="board-stats" aria-label="Classifica">
+      {order.map((t) => {
+        const mem = st.p.filter((p) => p[2] === t);
+        const lead = max > 0 && st.sc[t] === max;
+        return (
+          <div key={t} className={`stat${lead ? ' lead' : ''}${st.turn === t && st.ph === 'q' ? ' turn-now' : ''}`} style={{ '--tc': COLORS[t] }}>
+            <div className="stat-head">
+              <b>{st.turn === t && st.ph === 'q' ? '▶ ' : ''}{lead ? '👑 ' : ''}{TEAMS[t]}</b>
+              <span className="stat-score">{st.sc[t]} {SPRITZ}</span>
+            </div>
+            <div className="stat-names">
+              {mem.length ? mem.map((p, i) => (
+                <span key={p[0]} className={p[0] === pid ? 'me' : ''}>{i ? ', ' : ''}{st.cap[t] === p[0] ? '★' : ''}{p[1]}</span>
+              )) : '—'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, hostSend }) {
   const [attempt, setAttempt] = useState('');
   const [ready, setReady] = useState(false);
@@ -159,14 +186,8 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, ho
         </form>
       )}
       {!mine && !host && <p className="muted">Discutete con la squadra in chat o a voce: il capitano gira la ruota e sceglie le lettere per tutti.</p>}
-      {host && (
-        <div className="panel">
-          <div className="votes">
-            {TEAMS.map((n, t) => <span key={t}><b style={{ color: COLORS[t] }}>{n}</b> {st.sc[t]} {SPRITZ}</span>)}
-          </div>
-          <button className="btn gold" type="button" onClick={() => hostSend('host:close')}>Chiudi il round</button>
-        </div>
-      )}
+      <Scoreboard st={st} pid={pid} />
+      {host && <button className="btn gold" type="button" onClick={() => hostSend('host:close')}>Chiudi il round</button>}
     </>
   );
 }

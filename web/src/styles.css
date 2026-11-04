@@ -145,3 +145,7 @@ button.opt:disabled { cursor: default; }
 .row.tight { gap: 4px; margin: 0; flex-wrap: nowrap; }
 .hint { margin: 0; padding: 8px 12px; border-top: 1px solid var(--line); }
 .chat .tabs .close { flex: none; width: 52px; font-size: 1.3rem; border-bottom-color: transparent; }
+.wheelbox.compact { width: min(100%, 280px); }
+.prize.small { padding: 6px 16px; }
+.prize.small strong { font-size: 1.8rem; }
+.big-btn { width: 100%; font-size: 1.5rem; min-height: 56px; margin: 8px 0; }

@@ -106,7 +106,7 @@ export default function App() {
       />
     );
   } else if (st.ph === 'lobby') body = <Lobby st={st} host={host} pid={pid} hostSend={hostSend} onEdit={() => setEditing(true)} toast={toast} />;
-  else if (st.ph === 'q') body = <Question st={st} tick={tick} host={host} pid={pid} up={up} hostSend={hostSend} onGuess={(l) => net.current.send({ t: 'guess', l })} onSolve={(a) => net.current.send({ t: 'solve', a })} />;
+  else if (st.ph === 'q') body = <Question st={st} tick={tick} host={host} pid={pid} up={up} hostSend={hostSend} onGuess={(l) => net.current.send({ t: 'guess', l })} onSolve={(a) => net.current.send({ t: 'solve', a })} onSpin={() => net.current.send({ t: 'spin' })} />;
   else if (st.ph === 'rev') body = <Reveal st={st} host={host} hostSend={hostSend} />;
   else if (st.ph === 'end') body = <End st={st} host={host} hostSend={hostSend} />;
   else body = <WheelScreen st={st} host={host} hostSend={hostSend} />;

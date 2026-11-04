@@ -113,6 +113,7 @@ export class Manager {
         this.sendStates(s);
         continue;
       }
+      if (G.passIfDue(s)) { G.bump(s); this.sendStates(s); continue; }
       const m = { t: 'tick', r: s.set.secs - s.el, b: G.board(s) };
       this.clients.get(s.code)?.forEach((c) => c.send(m));
     }
@@ -131,6 +132,7 @@ export class Manager {
     switch (msg.t) {
       case 'ping': conn.send({ t: 'pong' }); return;
       case 'join': return this.join(conn, msg);
+      case 'spin':
       case 'guess':
       case 'solve': return this.play(conn, msg);
       case 'chat': return this.playerChat(conn, msg);
@@ -197,7 +199,10 @@ export class Manager {
   play(conn, msg) {
     const s = this.session(conn);
     if (!s || conn.host || !conn.pid) return;
-    const res = msg.t === 'guess' ? G.guess(s, conn.pid, msg.l) : G.solve(s, conn.pid, V.clean(msg.a, 36));
+    let res;
+    if (msg.t === 'spin') res = G.spinTurn(s, conn.pid, this.rnd);
+    else if (msg.t === 'guess') res = G.guess(s, conn.pid, msg.l);
+    else res = G.solve(s, conn.pid, V.clean(msg.a, 36));
     if (res.err) return this.err(conn, 'bad_input', res.err);
     if (s.ph === 'rev') { this.log(s.code, 'round_end', s.players.length); this.save(); }
     this.touch(s);

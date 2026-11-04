@@ -17,7 +17,7 @@ function wrap(text, width = 13, max = 3) {
 }
 
 // Ruota a 6 spicchi con bulbi sul bordo; l'angolo finale arriva già calcolato dal server (tg, jt).
-export default function Wheel({ w, winners, teams, onDone }) {
+export default function Wheel({ w, winners, teams, onDone, variant = 'prize' }) {
   const rotor = useRef(null);
   const last = useRef(null);
   const [spinning, setSpinning] = useState(false);
@@ -42,7 +42,7 @@ export default function Wheel({ w, winners, teams, onDone }) {
   const label = `Ruota con 6 premi: ${w.l.map((l, i) => `${i + 1} ${l}`).join(', ')}`;
   return (
     <div className="wheel-stage">
-      <div className={`wheelbox${spinning ? ' spinning' : ''}`}>
+      <div className={`wheelbox${spinning ? ' spinning' : ''}${variant === 'turn' ? ' compact' : ''}`}>
         <div className="flapper" />
         <svg viewBox="0 0 320 320" role="img" aria-label={label}>
           <circle cx="160" cy="160" r="158" fill="#7a5a00" />
@@ -72,7 +72,13 @@ export default function Wheel({ w, winners, teams, onDone }) {
           <circle cx="160" cy="160" r="22" fill="url(#hub)" stroke="#7a5a00" strokeWidth="3" />
         </svg>
       </div>
-      {done && (
+      {done && variant === 'turn' && (
+        <div className="prize small" aria-live="polite">
+          <small>La ruota dice</small>
+          <strong>{w.l[w.tg]}</strong>
+        </div>
+      )}
+      {done && variant !== 'turn' && (
         <div className="prize" aria-live="polite">
           <small>Hai vinto</small>
           <strong>{w.l[w.tg]}</strong>

@@ -84,8 +84,8 @@ test('partita completa', async () => {
   await srv.close();
 });
 
-test('lettere: solo il capitano di turno; turno che passa; capitano scelto dall’host', async () => {
-  const srv = await createServer({ port: 0, file: tmp(), timers: false });
+test('lettere: ruota, solo il capitano di turno, turno che passa; capitano scelto dall’host', async () => {
+  const srv = await createServer({ port: 0, file: tmp(), timers: false, rnd: () => 0.5 });
   const { h, code, cmd } = await host(srv.port);
   const ps = [];
   for (const n of ['Anna', 'Bruno', 'Carla', 'Dino']) ps.push(await player(srv.port, code, n, 'T'));
@@ -99,10 +99,18 @@ test('lettere: solo il capitano di turno; turno che passa; capitano scelto dall�
   assert.equal((await ps[0].wait((m) => m.t === 'error')).code, 'bad_input');
   ps[1].send({ t: 'guess', l: 'e' }); // capitano di un'altra squadra, non è il suo turno
   assert.equal((await ps[1].wait((m) => m.t === 'error')).code, 'bad_input');
+  ps[3].send({ t: 'guess', l: 'e' }); // prima va girata la ruota
+  assert.equal((await ps[3].wait((m) => m.t === 'error')).msg, 'Gira prima la ruota.');
+  ps[3].send({ t: 'spin' });
+  const sp = await h.state((m) => m.sp);
+  assert.equal(sp.sp.v, 2);
   ps[3].send({ t: 'guess', l: 'e' });
   const hit = await h.state((m) => m.ph === 'q' && m.called.length === 1);
   assert.equal(hit.la.kind, 'hit');
   assert.equal(hit.turn, 0);
+  assert.equal(hit.sp, null);
+  ps[3].send({ t: 'spin' });
+  await h.state((m) => m.sp);
   ps[3].send({ t: 'guess', l: 'z' });
   const miss = await h.state((m) => m.called?.length === 2);
   assert.equal(miss.la.kind, 'miss');
@@ -124,7 +132,7 @@ test('timer del turno: scaduto il tempo passa la mano', async () => {
 });
 
 test('rientro giocatore: con token sì, senza token no', async () => {
-  const srv = await createServer({ port: 0, file: tmp(), timers: false });
+  const srv = await createServer({ port: 0, file: tmp(), timers: false, rnd: () => 0.5 });
   const { h, code, cmd } = await host(srv.port);
   const a = await player(srv.port, code, 'Anna', 'Rossi');
   const b = await player(srv.port, code, 'Bruno', 'Verdi');
@@ -132,6 +140,8 @@ test('rientro giocatore: con token sì, senza token no', async () => {
   await b.wait((m) => m.t === 'joined');
   cmd('host:start');
   await a.state((m) => m.ph === 'q');
+  a.send({ t: 'spin' });
+  await a.state((m) => m.sp);
   a.send({ t: 'guess', l: 'e' });
   await a.state((m) => m.ph === 'q' && m.called.length === 1);
   a.ws.terminate();

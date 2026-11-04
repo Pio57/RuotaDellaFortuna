@@ -1,15 +1,20 @@
 // Logica di gioco pura: nessun I/O, il caso arriva come parametro (rnd) così i test sono ripetibili.
 //
 // Regole: in ogni round c'è una frase nascosta sul tabellone. Le squadre giocano a turno: il capitano
-// della squadra di turno chiama una lettera. Se c'è, scopre tutte le sue occorrenze (LETTER_PTS ciascuna)
-// e la squadra continua; se non c'è, il turno passa. Il capitano può anche tentare di risolvere la frase:
+// della squadra di turno gira la ruota (valore in spritz per lettera, oppure «Passa») e chiama una lettera.
+// Se c'è, scopre tutte le sue occorrenze (valore × occorrenze) e la squadra continua con un nuovo giro;
+// se non c'è, il turno passa. Il capitano può anche tentare di risolvere la frase:
 // se indovina il round finisce con un bonus, altrimenti il turno passa. Il tempo (set.secs) è per turno.
 
 export const TEAMS = ['Irpini', 'Scozzesi', 'Romani'];
 export const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const SECS_OPTIONS = [15, 30, 45, 60, 90];
-export const LETTER_PTS = 10;
-export const SOLVE_BONUS = 100;
+// Ruota del turno: 0 = «Passa» (si perde il turno). I punteggi sono in spritz.
+export const TURN_WHEEL = [3, 5, 8, 2, 0, 10];
+export const SOLVE_BONUS = 30;
+export const HIDDEN_BONUS = 3;
+export const PASS_DELAY = 7; // secondi di attesa dopo «Passa», il tempo del giro
+
 export const LIMITS = { name: 24, chat: 200, cat: 18, t: 140, board: 36, anec: 240, prize: 36, rounds: 6 };
 
 const LETTER = /\p{L}/u;
@@ -48,7 +53,7 @@ export function newSession(code, hostKey, now) {
   return {
     code, hostKey, createdAt: now, lastActivity: now, e: 0,
     ph: 'lobby', players: [], captains: [null, null, null], rounds: defaultRounds(), set: defaultSet(),
-    ri: 0, scores: [0, 0, 0], el: 0, turn: 0, phrase: '', called: [], gain: [0, 0, 0], la: null,
+    ri: 0, scores: [0, 0, 0], el: 0, turn: 0, phrase: '', called: [], gain: [0, 0, 0], la: null, spin: null, sid: 0,
     rv: null, win: [], w: null, wid: 0,
   };
 }
@@ -138,6 +143,7 @@ export function startRound(s) {
   s.called = [];
   s.gain = [0, 0, 0];
   s.la = null;
+  s.spin = null;
   s.rv = null;
   s.phrase = r.bd.toLocaleUpperCase('it');
   s.turn = nextLive(s, s.ri % 3);
@@ -157,6 +163,7 @@ export function board(s) {
 function passTurn(s) {
   s.turn = nextLive(s, s.turn + 1);
   s.el = 0;
+  s.spin = null;
 }
 
 function finish(s, team, bonus) {
@@ -178,6 +185,8 @@ function gate(s, pid) {
 export function guess(s, pid, l) {
   const err = gate(s, pid);
   if (err) return { err };
+  if (!s.spin) return { err: 'Gira prima la ruota.' };
+  if (!s.spin.val) return { err: 'La ruota ha detto «Passa».' };
   const ch = typeof l === 'string' ? Array.from(l.trim()) : [];
   if (ch.length !== 1 || !LETTER.test(ch[0])) return { err: 'Lettera non valida.' };
   const b = base(ch[0]);
@@ -186,10 +195,11 @@ export function guess(s, pid, l) {
   s.called.push([b, team]);
   const n = Array.from(s.phrase).filter((c) => LETTER.test(c) && base(c) === b).length;
   if (n > 0) {
-    const pts = n * LETTER_PTS;
+    const pts = n * s.spin.val;
     s.scores[team] += pts;
     s.gain[team] += pts;
     s.el = 0;
+    s.spin = null; // dopo ogni lettera giusta si rigira
     s.la = { team, kind: 'hit', l: b, n, pts };
     if (hiddenCount(s) === 0) { s.la.kind = 'complete'; finish(s, team, SOLVE_BONUS); }
   } else {
@@ -205,7 +215,7 @@ export function solve(s, pid, attempt) {
   if (typeof attempt !== 'string' || !lettersOf(attempt)) return { err: 'Scrivi la frase.' };
   const team = s.turn;
   if (lettersOf(attempt) === lettersOf(s.phrase)) {
-    const bonus = SOLVE_BONUS + LETTER_PTS * hiddenCount(s);
+    const bonus = SOLVE_BONUS + HIDDEN_BONUS * hiddenCount(s);
     s.la = { team, kind: 'solve', pts: bonus };
     finish(s, team, bonus);
   } else {
@@ -213,6 +223,24 @@ export function solve(s, pid, attempt) {
     passTurn(s);
   }
   return { ok: true };
+}
+
+export function spinTurn(s, pid, rnd) {
+  const err = gate(s, pid);
+  if (err) return { err };
+  if (s.spin) return { err: 'Hai già girato la ruota.' };
+  const tg = Math.floor(rnd() * TURN_WHEEL.length);
+  s.sid++;
+  s.spin = { id: s.sid, tg, jt: Math.round(rnd() * 36) - 18, val: TURN_WHEEL[tg], at: s.el };
+  return { ok: true };
+}
+
+// Dopo «Passa» il turno cambia quando il giro è finito.
+export function passIfDue(s) {
+  if (s.ph !== 'q' || !s.spin || s.spin.val || s.el - s.spin.at < PASS_DELAY) return false;
+  s.la = { team: s.turn, kind: 'pass' };
+  passTurn(s);
+  return true;
 }
 
 export function timeoutTurn(s) {
@@ -260,6 +288,7 @@ export function reset(s) {
   s.called = [];
   s.gain = [0, 0, 0];
   s.la = null;
+  s.spin = null;
   s.rv = null;
   s.win = [];
   s.w = null;
@@ -288,6 +317,8 @@ export function snapshot(s, viewerPid) {
     out.turn = s.turn;
     out.called = s.called.map((c) => c.slice());
     out.la = s.la;
+    out.tw = TURN_WHEEL;
+    out.sp = s.spin ? { id: s.spin.id, tg: s.spin.tg, jt: s.spin.jt, v: s.spin.val } : null;
   }
   if (s.ph === 'rev') out.rv = s.rv;
   if (s.ph === 'end' || s.ph === 'wheel') out.win = s.win;

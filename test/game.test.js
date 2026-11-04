@@ -10,6 +10,7 @@ const mk = (n = 0) => {
   for (let i = 0; i < n; i++) G.addPlayer(s, 'p' + i, 't' + i, 'Nome' + i, 'Cognome');
   return s;
 };
+const spin = (s, val = 5) => { s.spin = { id: 1, tg: 0, jt: 0, val, at: s.el }; };
 const capOf = (s, t = s.turn) => s.captains[t];
 
 test('40 giocatori: squadre differiscono al massimo di uno', () => {
@@ -53,19 +54,22 @@ test('all\'inizio del round il tabellone è tutto nascosto e il turno parte dall
   assert.equal(s.turn, 1);
 });
 
-test('lettera presente: scopre tutte le occorrenze, +10 ciascuna (3 volte la I), la squadra continua', () => {
+test('lettera presente: scopre le occorrenze, valore × 3 volte la I, la squadra continua e rigira', () => {
   const s = mk(3);
   G.startRound(s); // MELITO IRPINO
+  spin(s, 5);
   const r = G.guess(s, capOf(s), 'i');
   assert.ok(r.ok);
   assert.equal(Array.from(G.board(s)).filter((c) => c === 'I').length, 3);
-  assert.equal(s.scores[0], 30);
+  assert.equal(s.scores[0], 15);
   assert.equal(s.turn, 0);
+  assert.equal(s.spin, null);
 });
 
 test('lettera assente: il turno passa alla squadra successiva', () => {
   const s = mk(3);
   G.startRound(s);
+  spin(s);
   assert.ok(G.guess(s, capOf(s), 'z').ok);
   assert.equal(s.scores[0], 0);
   assert.equal(s.turn, 1);
@@ -75,6 +79,7 @@ test('accenti: A scopre anche À', () => {
   const s = mk(3);
   s.rounds[0].bd = 'REALTÀ';
   G.startRound(s);
+  spin(s);
   G.guess(s, capOf(s), 'a');
   assert.equal(G.board(s), '__A__À');
 });
@@ -82,22 +87,25 @@ test('accenti: A scopre anche À', () => {
 test('solo il capitano della squadra di turno può giocare; lettere ripetute o non valide rifiutate', () => {
   const s = mk(6);
   G.startRound(s);
+  spin(s);
   assert.ok(G.guess(s, 'p3', 'a').err); // compagno non capitano
   assert.ok(G.guess(s, 'p1', 'a').err); // capitano di un'altra squadra
   assert.ok(G.guess(s, 'sconosciuto', 'a').err);
   assert.ok(G.guess(s, 'p0', 'ab').err);
   assert.ok(G.guess(s, 'p0', '7').err);
   assert.ok(G.guess(s, 'p0', 'e').ok);
+  spin(s);
   assert.ok(G.guess(s, 'p0', 'E').err); // già chiamata
 });
 
 test('risolvere: giusta → bonus e fine round; sbagliata → turno passa', () => {
   const s = mk(3);
   G.startRound(s);
-  G.guess(s, 'p0', 'i'); // +30
+  spin(s);
+  G.guess(s, 'p0', 'i'); // +15
   assert.ok(G.solve(s, 'p0', 'Melito  Irpino').ok);
   assert.equal(s.ph, 'rev');
-  assert.ok(s.scores[0] > 30 + 100); // 30 + bonus 100 + 10 per ogni lettera ancora nascosta
+  assert.ok(s.scores[0] > 15 + 30); // 15 + bonus 30 + 3 per ogni lettera ancora nascosta
   assert.equal(s.rv.by, 0);
   const t = mk(3);
   G.startRound(t);
@@ -110,11 +118,11 @@ test('completare l\'ultima lettera chiude il round con bonus', () => {
   const s = mk(3);
   s.rounds[0].bd = 'AB';
   G.startRound(s);
-  G.guess(s, 'p0', 'a');
-  G.guess(s, 'p0', 'b');
+  spin(s); G.guess(s, 'p0', 'a');
+  spin(s); G.guess(s, 'p0', 'b');
   assert.equal(s.ph, 'rev');
   assert.equal(s.rv.by, 0);
-  assert.equal(s.scores[0], 10 + 10 + 100);
+  assert.equal(s.scores[0], 5 + 5 + 30);
 });
 
 test('scadenza del turno: passa alla squadra successiva; squadre vuote saltate', () => {
@@ -163,4 +171,31 @@ test('round predefiniti validi; configurazione senza frase rifiutata', () => {
   assert.ok(validConfig({ rounds: s.rounds, set: s.set }));
   assert.equal(validConfig({ rounds: [{ cat: 'a', t: 'b', bd: '', an: '' }], set: s.set }), null);
   assert.equal(validConfig({ rounds: [{ cat: 'a', t: 'b', bd: '123', an: '' }], set: s.set }), null);
+});
+
+test('ruota del turno: prima si gira, una volta sola, solo il capitano', () => {
+  const s = mk(6);
+  G.startRound(s);
+  assert.equal(G.guess(s, 'p0', 'e').err, 'Gira prima la ruota.');
+  assert.ok(G.spinTurn(s, 'p3', rnd).err); // compagno non capitano
+  assert.ok(G.spinTurn(s, 'p1', rnd).err); // non è il suo turno
+  assert.ok(G.spinTurn(s, 'p0', () => 0.5).ok);
+  assert.equal(s.spin.val, 2); // spicchio 3 della ruota
+  assert.ok(G.spinTurn(s, 'p0', rnd).err); // già girata
+  assert.ok(G.guess(s, 'p0', 'e').ok);
+});
+
+test('«Passa»: nessuna lettera, il turno cambia a giro finito', () => {
+  const s = mk(3);
+  G.startRound(s);
+  assert.ok(G.spinTurn(s, 'p0', () => 0.7).ok); // spicchio 4 = Passa
+  assert.equal(s.spin.val, 0);
+  assert.ok(G.guess(s, 'p0', 'e').err);
+  s.el = G.PASS_DELAY - 1;
+  assert.equal(G.passIfDue(s), false);
+  s.el = G.PASS_DELAY;
+  assert.equal(G.passIfDue(s), true);
+  assert.equal(s.turn, 1);
+  assert.equal(s.la.kind, 'pass');
+  assert.equal(s.spin, null);
 });

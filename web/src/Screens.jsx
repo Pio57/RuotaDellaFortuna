@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import Wheel from './Wheel.jsx';
 
+const SPRITZ = '🍹';
+
 export const TEAMS = ['Irpini', 'Scozzesi', 'Romani'];
 export const COLORS = ['#34d27b', '#5aa9ff', '#ff7a45'];
 
@@ -93,22 +95,28 @@ function lastAction(la, st) {
   if (!la) return null;
   const who = TEAMS[la.team];
   switch (la.kind) {
-    case 'hit': return `${who}: la ${la.l} c’è ${la.n} ${la.n > 1 ? 'volte' : 'volta'} (+${la.pts})`;
+    case 'hit': return `${who}: la ${la.l} c’è ${la.n} ${la.n > 1 ? 'volte' : 'volta'} (+${la.pts} ${SPRITZ})`;
     case 'miss': return `${who}: la ${la.l} non c’è`;
-    case 'solve': return `${who} ha risolto la frase! (+${la.pts})`;
-    case 'complete': return `${who} ha scoperto l’ultima lettera! (+${la.pts})`;
+    case 'solve': return `${who} ha risolto la frase! (+${la.pts} ${SPRITZ})`;
+    case 'complete': return `${who} ha scoperto l’ultima lettera! (+${la.pts} ${SPRITZ})`;
+    case 'pass': return `${who}: la ruota dice Passa!`;
     case 'fail': return `${who}: la frase non è questa`;
     case 'timeout': return `${who}: tempo scaduto`;
     default: return st && null;
   }
 }
 
-export function Question({ st, tick, host, pid, up, onGuess, onSolve, hostSend }) {
+export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, hostSend }) {
   const [attempt, setAttempt] = useState('');
+  const [ready, setReady] = useState(false);
+  const spinId = st.sp ? st.sp.id : 0;
+  useEffect(() => { setReady(false); }, [spinId, st.turn, st.ri]);
   const r = tick ? tick.r : st.r;
   const captainId = st.cap[st.turn];
   const captain = st.p.find((p) => p[0] === captainId);
   const mine = !host && captainId === pid;
+  const sp = st.sp && { id: st.sp.id, tg: st.sp.tg, jt: st.sp.jt, l: st.tw.map((v) => (v ? `${v} spritz` : 'Passa')) };
+  const canPick = mine && up && st.sp && st.sp.v > 0 && ready;
   const used = new Map(st.called.map((c) => [c[0], c[1]]));
   const msg = lastAction(st.la, st);
   const submit = (e) => {
@@ -124,15 +132,19 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, hostSend }
       <div className="question">{st.q.t}</div>
       <div className="turn" style={{ '--tc': COLORS[st.turn] }} role="status" aria-live="polite">
         <strong>Tocca a {TEAMS[st.turn]}</strong>
-        <span>{mine ? 'Tocca a te, capitano: scegli una lettera.' : captain ? `Capitano: ${captain[1]}` : ''}</span>
+        <span>{mine ? (st.sp ? 'Capitano: scegli una lettera.' : 'Capitano: gira la ruota.') : captain ? `Capitano: ${captain[1]}` : ''}</span>
       </div>
       {msg && <div className="la" style={{ '--tc': COLORS[st.la.team] }} aria-live="polite">{msg}</div>}
+      {sp && <Wheel w={sp} variant="turn" onDone={() => setReady(true)} />}
+      {mine && !st.sp && (
+        <button className="btn gold big-btn" type="button" disabled={!up} onClick={onSpin}>Gira la ruota</button>
+      )}
       <div className="keys" role="group" aria-label="Lettere">
         {KEYS.map((k) => {
           const by = used.get(k);
           return (
             <button key={k} type="button" className={`key${by !== undefined ? ' used' : ''}`} style={by !== undefined ? { '--tc': COLORS[by] } : undefined}
-              disabled={!mine || !up || by !== undefined} onClick={() => onGuess(k)}>{k}</button>
+              disabled={!canPick || by !== undefined} onClick={() => onGuess(k)}>{k}</button>
           );
         })}
       </div>
@@ -145,11 +157,11 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, hostSend }
           </div>
         </form>
       )}
-      {!mine && !host && <p className="muted">Discutete con la squadra in chat o a voce: il capitano sceglie per tutti.</p>}
+      {!mine && !host && <p className="muted">Discutete con la squadra in chat o a voce: il capitano gira la ruota e sceglie le lettere per tutti.</p>}
       {host && (
         <div className="panel">
           <div className="votes">
-            {TEAMS.map((n, t) => <span key={t}><b style={{ color: COLORS[t] }}>{n}</b> {st.sc[t]}</span>)}
+            {TEAMS.map((n, t) => <span key={t}><b style={{ color: COLORS[t] }}>{n}</b> {st.sc[t]} {SPRITZ}</span>)}
           </div>
           <button className="btn gold" type="button" onClick={() => hostSend('host:close')}>Chiudi il round</button>
         </div>
@@ -162,7 +174,7 @@ function Standings({ st }) {
   const order = [0, 1, 2].sort((a, b) => st.sc[b] - st.sc[a]);
   return (
     <ul className="stand">
-      {order.map((t) => <li key={t} className={(st.win || []).includes(t) ? 'win' : ''} style={{ '--tc': COLORS[t] }}><span>{TEAMS[t]}</span><span>{st.sc[t]}</span></li>)}
+      {order.map((t) => <li key={t} className={(st.win || []).includes(t) ? 'win' : ''} style={{ '--tc': COLORS[t] }}><span>{TEAMS[t]}</span><span>{st.sc[t]} {SPRITZ}</span></li>)}
     </ul>
   );
 }
@@ -176,7 +188,7 @@ export function Reveal({ st, host, hostSend }) {
         <h2>{by >= 0 ? `${TEAMS[by]} ha risolto il round` : 'Round chiuso'}</h2>
         <div className="res">
           {TEAMS.map((n, t) => (
-            <div key={t} style={{ '--tc': COLORS[t] }}><span><b>{n}</b></span><span className="pts">+{st.rv.tr[t]}</span></div>
+            <div key={t} style={{ '--tc': COLORS[t] }}><span><b>{n}</b></span><span className="pts">+{st.rv.tr[t]} {SPRITZ}</span></div>
           ))}
         </div>
         {st.rv.an && <p>{st.rv.an}</p>}

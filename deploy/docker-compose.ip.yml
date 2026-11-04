@@ -1,0 +1,16 @@
+# Senza dominio e senza Traefik: il sito risponde su http://<IP del VPS>:3000 (WebSocket compreso).
+# Niente HTTPS: va bene per una prova o per una serata, ma il pulsante "Copia link" potrebbe non copiare
+# (il browser lo permette solo in HTTPS) e mostra il link da copiare a mano.
+#
+#   docker compose -f deploy/docker-compose.ip.yml up -d --build
+#   (apri la porta 3000 nel firewall del VPS: ufw allow 3000/tcp e pannello Hostinger)
+services:
+  ruota-della-fortuna:
+    build: ..
+    container_name: ruota-della-fortuna
+    restart: unless-stopped
+    volumes:
+      - ruota-data:/data
+    ports: ["3000:3000"]
+volumes:
+  ruota-data:

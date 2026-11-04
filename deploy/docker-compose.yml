@@ -1,7 +1,7 @@
 # Chi è Pio? accanto al template "n8n" di Hostinger (Traefik già attivo in Docker, gestisce HTTPS).
 # Il container si unisce alla rete di Traefik e non pubblica porte sull'host.
 #
-#   git clone <repository> /opt/chi-e-pio && cd /opt/chi-e-pio
+#   git clone https://github.com/Pio57/RuotaDellaFortuna.git /opt/ruota-della-fortuna && cd /opt/ruota-della-fortuna
 #   cp deploy/.env.example deploy/.env      # poi compila DOMAIN e TRAEFIK_NETWORK
 #   docker compose --env-file deploy/.env -f deploy/docker-compose.yml up -d --build
 #

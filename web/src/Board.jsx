@@ -35,10 +35,12 @@ export function layout(str) {
 // -2 = casella spenta, -1 = spazio tra parole (spenta), altrimenti indice del carattere.
 export default function Board({ str }) {
   const prev = useRef(null);
+  const flipped = useRef(new Map()); // indice → ritardo: la classe resta, così i ridisegni non interrompono l'animazione
   const chars = Array.from(str);
   const old = prev.current;
   const fresh = [];
   if (old && old.length === chars.length) chars.forEach((c, i) => { if (old[i] === '_' && c !== '_') fresh.push(i); });
+  fresh.forEach((v, k) => { if (!flipped.current.has(v)) flipped.current.set(v, k * 160); });
   useEffect(() => { prev.current = chars; });
   const label = `Tabellone: ${chars.map((c) => (c === '_' ? 'lettera nascosta' : c)).join(' ')}`;
   return (
@@ -49,10 +51,16 @@ export default function Board({ str }) {
             if (v < 0) return <i className="cell off" key={c} />;
             const ch = chars[v];
             if (!isLetter(ch)) return <i className="cell shown" key={c}>{ch}</i>;
-            if (ch === '_') return <i className="cell hid" key={c} />;
-            const k = fresh.indexOf(v);
+            // carta a due facce: dorso verde (lettera nascosta) e fronte bianca con la lettera
+            if (ch === '_') return <i className="cell card hid" key={c}><span className="inner"><span className="face back" /><span className="face front" /></span></i>;
+            const delay = flipped.current.get(v);
+            const k = delay === undefined ? -1 : 1;
             return (
-              <i className={`cell shown${k >= 0 ? ' flip' : ''}`} key={c} style={k >= 0 ? { animationDelay: `${k * 90}ms` } : undefined}>{ch}</i>
+              <i className="cell card" key={c}>
+                <span className={`inner${k >= 0 ? ' flip' : ''}`} style={k >= 0 ? { animationDelay: `${delay}ms` } : undefined}>
+                  <span className="face back" /><span className="face front">{ch}</span>
+                </span>
+              </i>
             );
           })}
         </div>

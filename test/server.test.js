@@ -107,14 +107,14 @@ test('lettere: ruota, solo il capitano di turno, turno che passa; capitano scelt
   ps[3].send({ t: 'guess', l: 'e' });
   const hit = await h.state((m) => m.ph === 'q' && m.called.length === 1);
   assert.equal(hit.la.kind, 'hit');
-  assert.equal(hit.turn, 0);
+  assert.equal(hit.turn, 1); // anche con la lettera giusta tocca alla squadra dopo
   assert.equal(hit.sp, null);
-  ps[3].send({ t: 'spin' });
+  ps[1].send({ t: 'spin' });
   await h.state((m) => m.sp);
-  ps[3].send({ t: 'guess', l: 'z' });
+  ps[1].send({ t: 'guess', l: 'z' });
   const miss = await h.state((m) => m.called?.length === 2);
   assert.equal(miss.la.kind, 'miss');
-  assert.equal(miss.turn, 1);
+  assert.equal(miss.turn, 2);
   await srv.close();
 });
 

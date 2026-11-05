@@ -54,7 +54,7 @@ test('all\'inizio del round il tabellone è tutto nascosto e il turno parte dall
   assert.equal(s.turn, 1);
 });
 
-test('lettera presente: scopre le occorrenze, valore × 5 volte la I, la squadra continua e rigira', () => {
+test('lettera presente: scopre le occorrenze, valore × 5 volte la I, il turno passa comunque', () => {
   const s = mk(3);
   G.startRound(s); // PAESE D’ORIGINE DI 2000 ABITANTI
   spin(s, 5);
@@ -62,7 +62,7 @@ test('lettera presente: scopre le occorrenze, valore × 5 volte la I, la squadra
   assert.ok(r.ok);
   assert.equal(Array.from(G.board(s)).filter((c) => c === 'I').length, 5);
   assert.equal(s.scores[0], 25);
-  assert.equal(s.turn, 0);
+  assert.equal(s.turn, 1);
   assert.equal(s.spin, null);
 });
 
@@ -95,7 +95,7 @@ test('solo il capitano della squadra di turno può giocare; lettere ripetute o n
   assert.ok(G.guess(s, 'p0', '7').err);
   assert.ok(G.guess(s, 'p0', 'e').ok);
   spin(s);
-  assert.ok(G.guess(s, 'p0', 'E').err); // già chiamata
+  assert.equal(G.guess(s, 'p1', 'E').err, 'Lettera già chiamata.');
 });
 
 test('risolvere: giusta → bonus e fine round; sbagliata → turno passa', () => {
@@ -103,10 +103,10 @@ test('risolvere: giusta → bonus e fine round; sbagliata → turno passa', () =
   G.startRound(s);
   spin(s);
   G.guess(s, 'p0', 'i'); // +25
-  assert.ok(G.solve(s, 'p0', 'paese  d’origine di 2000 ABITANTI').ok);
+  assert.ok(G.solve(s, 'p1', 'paese  d’origine di 2000 ABITANTI').ok); // tocca già alla squadra 1
   assert.equal(s.ph, 'rev');
-  assert.ok(s.scores[0] > 25 + 30); // 25 + bonus 30 + 3 per ogni lettera ancora nascosta
-  assert.equal(s.rv.by, 0);
+  assert.ok(s.scores[1] > 30); // bonus 30 + 3 per ogni lettera ancora nascosta
+  assert.equal(s.rv.by, 1);
   const t = mk(3);
   G.startRound(t);
   G.solve(t, 'p0', 'sbagliata');
@@ -119,10 +119,11 @@ test('completare l\'ultima lettera chiude il round con bonus', () => {
   s.rounds[0].bd = 'AB';
   G.startRound(s);
   spin(s); G.guess(s, 'p0', 'a');
-  spin(s); G.guess(s, 'p0', 'b');
+  spin(s); G.guess(s, 'p1', 'b');
   assert.equal(s.ph, 'rev');
-  assert.equal(s.rv.by, 0);
-  assert.equal(s.scores[0], 5 + 5 + 30);
+  assert.equal(s.rv.by, 1);
+  assert.equal(s.scores[0], 5);
+  assert.equal(s.scores[1], 5 + 30);
 });
 
 test('scadenza del turno: passa alla squadra successiva; squadre vuote saltate', () => {
@@ -206,6 +207,7 @@ test('«Bancarotta»: si perdono gli spritz del round e il turno, a giro finito'
   spin(s, 5);
   G.guess(s, 'p0', 'i'); // +25
   assert.equal(s.scores[0], 25);
+  s.turn = 0; // il giro torna alla squadra 0
   assert.ok(G.spinTurn(s, 'p0', () => 0.99).ok); // ultimo spicchio
   assert.equal(s.spin.val, -1);
   assert.ok(G.guess(s, 'p0', 'e').err);
@@ -238,7 +240,7 @@ test('i popup ricevono un id nuovo a ogni evento', () => {
   G.guess(s, 'p0', 'i');
   const first = s.la.id;
   spin(s);
-  G.guess(s, 'p0', 'e');
+  G.guess(s, 'p1', 'e');
   assert.ok(s.la.id > first);
   assert.equal(G.snapshot(s, 'p0').la.id, s.la.id);
 });

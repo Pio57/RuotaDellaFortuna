@@ -2,8 +2,8 @@
 //
 // Regole: in ogni round c'è una frase nascosta sul tabellone. Le squadre giocano a turno: il capitano
 // della squadra di turno gira la ruota (valore in spritz per lettera, oppure «Passa») e chiama una lettera.
-// Se c'è, scopre tutte le sue occorrenze (valore × occorrenze) e la squadra continua con un nuovo giro;
-// se non c'è, il turno passa. Il capitano può anche tentare di risolvere la frase:
+// Se c'è, scopre tutte le sue occorrenze (valore × occorrenze). In ogni caso il turno passa alla squadra
+// successiva: si gioca sempre a rotazione. Il capitano può anche tentare di risolvere la frase:
 // se indovina il round finisce con un bonus, altrimenti il turno passa. Il tempo (set.secs) è per turno.
 
 export const TEAMS = ['Squadra verde', 'Squadra blu', 'Squadra rossa'];
@@ -202,11 +202,8 @@ export function guess(s, pid, l) {
     const pts = n * s.spin.val;
     s.scores[team] += pts;
     s.gain[team] += pts;
-    s.el = 0;
-    s.hold = 0;
-    s.spin = null; // dopo ogni lettera giusta si rigira
     s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'hit', l: b, n, pts };
-    if (hiddenCount(s) === 0) { s.la.kind = 'complete'; finish(s, team, SOLVE_BONUS); }
+    if (hiddenCount(s) === 0) { s.la.kind = 'complete'; finish(s, team, SOLVE_BONUS); } else passTurn(s);
   } else {
     s.la = { id: (s.lid = (s.lid || 0) + 1), team, kind: 'miss', l: b, n: 0, pts: 0 };
     passTurn(s);

@@ -25,13 +25,12 @@ export const base = (c) => c.normalize('NFD').replace(/\p{M}/gu, '').toLocaleUpp
 const lettersOf = (str) => Array.from(str).filter((c) => LETTER.test(c)).map(base).join('');
 
 export function defaultRounds() {
-  // Come in TV: sul tabellone c'è una frase intera da scoprire; categoria e domanda sono solo l'indizio.
+  // cat = titolo visibile sopra il tabellone; bd = descrizione nascosta da scoprire lettera per lettera.
   return [
-    { cat: 'Origini', t: 'Di dove è Pio?', bd: 'PIO VIENE DA UN PAESINO IRPINO', an: 'Un paesino in provincia di Avellino, circa 2000 abitanti.' },
-    { cat: 'Startup', t: 'Che cosa ha creato all’università?', bd: 'LEARNINGVERSE: LINGUE IN REALTÀ VIRTUALE', an: 'Un’app in realtà virtuale per imparare le lingue, nata durante l’università.' },
-    { cat: 'Erasmus', t: 'Che cosa ha assaggiato a Glasgow?', bd: 'IL PEGGIOR PIATTO DI PIO: L’HAGGIS', an: 'Il piatto scozzese più schifoso che abbia mai assaggiato, fino a oggi.' },
-    { cat: 'Sport', t: 'Come si allena?', bd: 'ATLETA IBRIDO: CORSA, CALISTHENICS E NUOTO', an: 'Corsa e calisthenics, ma anche nuoto in piscina: lo sport è il suo hobby.' },
-    { cat: 'Passioni', t: 'Che cosa adora a tavola?', bd: 'PIO ADORA UN BUON BICCHIERE DI VINO', an: 'Il vino è una delle sue grandi passioni.' },
+    { cat: 'Melito Irpino', t: 'Che cos’è per Pio?', bd: 'PAESE D’ORIGINE DI 2000 ABITANTI', an: 'Un paesino in provincia di Avellino, sud Italia.' },
+    { cat: 'Learningverse', t: 'Che cos’è?', bd: 'STARTUP: PRODOTTO IN REALTÀ VIRTUALE', an: 'Un’app in realtà virtuale per imparare le lingue, nata all’università.' },
+    { cat: 'Haggis', t: 'Che cos’è?', bd: 'PIATTO SCOZZESE A BASE DI INTERIORA DI PECORA', an: 'Lo ha assaggiato a Glasgow durante l’Erasmus: il più schifoso mai provato, fino a oggi.' },
+    { cat: 'Atleta ibrido', t: 'Che cosa fa?', bd: 'CORSA, CALISTHENICS E NUOTO', an: 'Lo sport è il suo hobby: si allena con corsa e calisthenics, e va anche in piscina.' },
   ];
 }
 

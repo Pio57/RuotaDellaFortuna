@@ -48,7 +48,7 @@ test('capitano: uno per squadra, scelto dall\'host, sostituito se cambia squadra
 test('all\'inizio del round il tabellone è tutto nascosto e il turno parte dalla squadra del round', () => {
   const s = mk(3);
   G.startRound(s);
-  assert.ok(!G.board(s).replace(/[_ ]/g, ''));
+  assert.ok(!/\p{L}/u.test(G.board(s))); // numeri e punteggiatura sono visibili, le lettere no
   assert.equal(s.turn, 0);
   s.ri = 1; G.startRound(s);
   assert.equal(s.turn, 1);
@@ -56,7 +56,7 @@ test('all\'inizio del round il tabellone è tutto nascosto e il turno parte dall
 
 test('lettera presente: scopre le occorrenze, valore × 5 volte la I, la squadra continua e rigira', () => {
   const s = mk(3);
-  G.startRound(s); // PIO VIENE DA UN PAESINO IRPINO
+  G.startRound(s); // PAESE D’ORIGINE DI 2000 ABITANTI
   spin(s, 5);
   const r = G.guess(s, capOf(s), 'i');
   assert.ok(r.ok);
@@ -103,7 +103,7 @@ test('risolvere: giusta → bonus e fine round; sbagliata → turno passa', () =
   G.startRound(s);
   spin(s);
   G.guess(s, 'p0', 'i'); // +25
-  assert.ok(G.solve(s, 'p0', 'pio  viene da un PAESINO irpino').ok);
+  assert.ok(G.solve(s, 'p0', 'paese  d’origine di 2000 ABITANTI').ok);
   assert.equal(s.ph, 'rev');
   assert.ok(s.scores[0] > 25 + 30); // 25 + bonus 30 + 3 per ogni lettera ancora nascosta
   assert.equal(s.rv.by, 0);
@@ -157,9 +157,9 @@ test('lo stato non rivela la frase prima di rev, né rig, né cognomi', () => {
   const s = mk(3);
   G.startRound(s);
   const p = JSON.stringify(G.snapshot(s, 'p0'));
-  assert.ok(!p.includes('PAESINO') && !p.includes('"rig"') && !p.includes('Cognome') && !p.includes('"bd"'));
+  assert.ok(!p.includes('ABITANTI') && !p.includes('"rig"') && !p.includes('Cognome') && !p.includes('"bd"'));
   G.closeRound(s);
-  assert.equal(G.snapshot(s, 'p0').b, 'PIO VIENE DA UN PAESINO IRPINO');
+  assert.equal(G.snapshot(s, 'p0').b, 'PAESE D’ORIGINE DI 2000 ABITANTI');
   s.ph = 'end'; G.spin(s, rnd);
   assert.ok(!JSON.stringify(G.snapshot(s, 'p0')).includes('"rig"'));
   assert.ok(G.snapshot(s, null).cfg);

@@ -44,9 +44,9 @@ export default function Editor({ cfg, onSave, onClose }) {
         {rounds.map((r, i) => (
           <fieldset key={i}>
             <legend>Round {i + 1}</legend>
-            <Field label="Categoria (max 18)"><input value={r.cat} maxLength={18} onChange={(e) => upd(i, { cat: e.target.value })} /></Field>
+            <Field label="Titolo sopra il tabellone (max 18)"><input value={r.cat} maxLength={18} onChange={(e) => upd(i, { cat: e.target.value })} /></Field>
             <Field label="Indizio / domanda (max 140)"><textarea rows={3} value={r.t} maxLength={140} onChange={(e) => upd(i, { t: e.target.value })} /></Field>
-            <Field label="Frase da indovinare (max 50)"><input value={r.bd} maxLength={50} onChange={(ev) => upd(i, { bd: ev.target.value })} /></Field>
+            <Field label="Frase nascosta sul tabellone (max 50)"><input value={r.bd} maxLength={50} onChange={(ev) => upd(i, { bd: ev.target.value })} /></Field>
             <Field label="Aneddoto (max 240)"><textarea rows={3} value={r.an} maxLength={240} onChange={(e) => upd(i, { an: e.target.value })} /></Field>
             {rounds.length > 1 && <button className="btn" type="button" onClick={() => setRounds(rounds.filter((_, k) => k !== i))}>Elimina round</button>}
           </fieldset>

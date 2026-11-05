@@ -166,6 +166,7 @@ export default function App() {
           {!up && <span className="badge off" role="status">Connessione assente</span>}
         </div>
       </header>
+      {inRound && role !== 'none' && <h2 className="board-title">{st.q.cat}</h2>}
       {inRound && role !== 'none' && <Board key={`${st.c}:${st.ri}`} str={st.ph === 'q' && tick ? tick.b : st.b} />}
       <main>{body}</main>
       {st && role !== 'none' && (

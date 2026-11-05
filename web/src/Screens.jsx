@@ -156,7 +156,7 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, on
   };
   return (
     <>
-      <div className="qhead"><span>{st.q.cat}</span><span>Round {st.ri + 1} di {st.n}</span><span>{r} s</span></div>
+      <div className="qhead"><span>Round {st.ri + 1} di {st.n}</span><span>{r} s</span></div>
       <div className="timebar"><i style={{ width: `${(100 * r) / st.tot}%` }} /></div>
       <div className="question">{st.q.t}</div>
       <div className="turn" style={{ '--tc': COLORS[st.turn] }} role="status" aria-live="polite">

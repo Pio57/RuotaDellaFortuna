@@ -54,14 +54,14 @@ test('all\'inizio del round il tabellone è tutto nascosto e il turno parte dall
   assert.equal(s.turn, 1);
 });
 
-test('lettera presente: scopre le occorrenze, valore × 3 volte la I, la squadra continua e rigira', () => {
+test('lettera presente: scopre le occorrenze, valore × 5 volte la I, la squadra continua e rigira', () => {
   const s = mk(3);
-  G.startRound(s); // MELITO IRPINO
+  G.startRound(s); // PIO VIENE DA UN PAESINO IRPINO
   spin(s, 5);
   const r = G.guess(s, capOf(s), 'i');
   assert.ok(r.ok);
-  assert.equal(Array.from(G.board(s)).filter((c) => c === 'I').length, 3);
-  assert.equal(s.scores[0], 15);
+  assert.equal(Array.from(G.board(s)).filter((c) => c === 'I').length, 5);
+  assert.equal(s.scores[0], 25);
   assert.equal(s.turn, 0);
   assert.equal(s.spin, null);
 });
@@ -102,10 +102,10 @@ test('risolvere: giusta → bonus e fine round; sbagliata → turno passa', () =
   const s = mk(3);
   G.startRound(s);
   spin(s);
-  G.guess(s, 'p0', 'i'); // +15
-  assert.ok(G.solve(s, 'p0', 'Melito  Irpino').ok);
+  G.guess(s, 'p0', 'i'); // +25
+  assert.ok(G.solve(s, 'p0', 'pio  viene da un PAESINO irpino').ok);
   assert.equal(s.ph, 'rev');
-  assert.ok(s.scores[0] > 15 + 30); // 15 + bonus 30 + 3 per ogni lettera ancora nascosta
+  assert.ok(s.scores[0] > 25 + 30); // 25 + bonus 30 + 3 per ogni lettera ancora nascosta
   assert.equal(s.rv.by, 0);
   const t = mk(3);
   G.startRound(t);
@@ -157,9 +157,9 @@ test('lo stato non rivela la frase prima di rev, né rig, né cognomi', () => {
   const s = mk(3);
   G.startRound(s);
   const p = JSON.stringify(G.snapshot(s, 'p0'));
-  assert.ok(!p.includes('MELITO') && !p.includes('"rig"') && !p.includes('Cognome') && !p.includes('"bd"'));
+  assert.ok(!p.includes('PAESINO') && !p.includes('"rig"') && !p.includes('Cognome') && !p.includes('"bd"'));
   G.closeRound(s);
-  assert.equal(G.snapshot(s, 'p0').b, 'MELITO IRPINO');
+  assert.equal(G.snapshot(s, 'p0').b, 'PIO VIENE DA UN PAESINO IRPINO');
   s.ph = 'end'; G.spin(s, rnd);
   assert.ok(!JSON.stringify(G.snapshot(s, 'p0')).includes('"rig"'));
   assert.ok(G.snapshot(s, null).cfg);
@@ -204,17 +204,17 @@ test('«Bancarotta»: si perdono gli spritz del round e il turno, a giro finito'
   const s = mk(3);
   G.startRound(s);
   spin(s, 5);
-  G.guess(s, 'p0', 'i'); // +15
-  assert.equal(s.scores[0], 15);
+  G.guess(s, 'p0', 'i'); // +25
+  assert.equal(s.scores[0], 25);
   assert.ok(G.spinTurn(s, 'p0', () => 0.99).ok); // ultimo spicchio
   assert.equal(s.spin.val, -1);
   assert.ok(G.guess(s, 'p0', 'e').err);
-  assert.equal(s.scores[0], 15); // per ora non cambia: il giro è in corso
+  assert.equal(s.scores[0], 25); // per ora non cambia: il giro è in corso
   s.el = G.PASS_DELAY;
   assert.ok(G.passIfDue(s));
   assert.equal(s.scores[0], 0);
   assert.equal(s.la.kind, 'bankrupt');
-  assert.equal(s.la.lost, 15);
+  assert.equal(s.la.lost, 25);
   assert.equal(s.turn, 1);
 });
 

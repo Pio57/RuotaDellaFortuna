@@ -16,7 +16,7 @@ export const SOLVE_BONUS = 30;
 export const HIDDEN_BONUS = 3;
 export const PASS_DELAY = 7; // secondi di attesa dopo «Passa», il tempo del giro
 
-export const LIMITS = { name: 24, chat: 200, cat: 18, t: 140, board: 36, anec: 240, prize: 36, rounds: 6 };
+export const LIMITS = { name: 24, chat: 200, cat: 18, t: 140, board: 50, anec: 240, prize: 36, rounds: 6 };
 
 const LETTER = /\p{L}/u;
 
@@ -25,12 +25,13 @@ export const base = (c) => c.normalize('NFD').replace(/\p{M}/gu, '').toLocaleUpp
 const lettersOf = (str) => Array.from(str).filter((c) => LETTER.test(c)).map(base).join('');
 
 export function defaultRounds() {
+  // Come in TV: sul tabellone c'è una frase intera da scoprire; categoria e domanda sono solo l'indizio.
   return [
-    { cat: 'Origini', t: 'Da quale paese dell’Irpinia viene Pio?', bd: 'MELITO IRPINO', an: 'Provincia di Avellino, sud Italia.' },
-    { cat: 'Erasmus', t: 'In quale città ha fatto l’Erasmus?', bd: 'GLASGOW', an: 'Un periodo in Scozia durante gli studi di informatica a Salerno.' },
-    { cat: 'Startup', t: 'Che cosa fa Commigo, la startup che ha co-fondato?', bd: 'LINGUE IN REALTÀ VIRTUALE', an: 'Commigo è un’applicazione in VR per l’apprendimento delle lingue. Pio ci lavora come software engineer e sul lato prodotto.' },
-    { cat: 'Sport', t: 'Come si definisce Pio quando si allena?', bd: 'ATLETA IBRIDO', an: 'Palestra per mettere massa muscolare e corsa in parallelo, con qualche gara da 10 km per darsi degli obiettivi.' },
-    { cat: 'Lavoro', t: 'Su cosa faceva ricerca all’università prima di arrivare qui?', bd: 'COMPUTER VISION', an: 'Un contratto di ricerca a Salerno su computer vision applicata a immagini mediche, poi il passaggio ai prodotti con AI.' },
+    { cat: 'Origini', t: 'Di dove è Pio?', bd: 'PIO VIENE DA UN PAESINO IRPINO', an: 'Un paesino in provincia di Avellino, circa 2000 abitanti.' },
+    { cat: 'Startup', t: 'Che cosa ha creato all’università?', bd: 'LEARNINGVERSE: LINGUE IN REALTÀ VIRTUALE', an: 'Un’app in realtà virtuale per imparare le lingue, nata durante l’università.' },
+    { cat: 'Erasmus', t: 'Che cosa ha assaggiato a Glasgow?', bd: 'IL PEGGIOR PIATTO DI PIO: L’HAGGIS', an: 'Il piatto scozzese più schifoso che abbia mai assaggiato, fino a oggi.' },
+    { cat: 'Sport', t: 'Come si allena?', bd: 'ATLETA IBRIDO: CORSA, CALISTHENICS E NUOTO', an: 'Corsa e calisthenics, ma anche nuoto in piscina: lo sport è il suo hobby.' },
+    { cat: 'Passioni', t: 'Che cosa adora a tavola?', bd: 'PIO ADORA UN BUON BICCHIERE DI VINO', an: 'Il vino è una delle sue grandi passioni.' },
   ];
 }
 

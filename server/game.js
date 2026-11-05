@@ -31,7 +31,7 @@ export function defaultRounds() {
     { cat: 'Learningverse', t: 'Che cos’è?', bd: 'STARTUP: PRODOTTO IN REALTÀ VIRTUALE', an: 'Un’app in realtà virtuale per imparare le lingue, nata all’università.' },
     { cat: 'Haggis', t: 'Che cos’è?', bd: 'PIATTO SCOZZESE A BASE DI INTERIORA DI PECORA', an: 'Lo ha assaggiato a Glasgow durante l’Erasmus: il più schifoso mai provato, fino a oggi.' },
     { cat: 'Atleta ibrido', t: 'Che cosa fa?', bd: 'CORSA, CALISTHENICS E NUOTO', an: 'Lo sport è il suo hobby: si allena con corsa e calisthenics, e va anche in piscina.' },
-    { cat: 'Otino', t: 'Che cos’è?', bd: 'IL PRIMO VERO NOME DI PIO', an: 'Il suo primo vero nome è Otino, non Pio.' },
+    { cat: 'Otino', t: 'Che cos’è?', bd: 'IL PRIMO NOME NON È PIO', an: 'Il suo primo vero nome è Otino, non Pio.' },
   ];
 }
 

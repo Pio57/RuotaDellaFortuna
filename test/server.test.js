@@ -62,7 +62,7 @@ test('partita completa', async () => {
   const ids = await Promise.all(ps.map((p) => p.wait((m) => m.t === 'joined').then((m) => m.pid)));
   await h.state((m) => m.p.length === 3);
   cmd('host:start');
-  const phrases = ['PAESE D’ORIGINE DI 2000 ABITANTI', 'STARTUP: PRODOTTO IN REALTÀ VIRTUALE', 'PIATTO SCOZZESE A BASE DI INTERIORA DI PECORA', 'CORSA, CALISTHENICS E NUOTO', 'IL PRIMO VERO NOME DI PIO'];
+  const phrases = ['PAESE D’ORIGINE DI 2000 ABITANTI', 'STARTUP: PRODOTTO IN REALTÀ VIRTUALE', 'PIATTO SCOZZESE A BASE DI INTERIORA DI PECORA', 'CORSA, CALISTHENICS E NUOTO', 'IL PRIMO NOME NON È PIO'];
   for (let r = 0; r < phrases.length; r++) {
     const st = await h.state((m) => m.ph === 'q' && m.ri === r);
     assert.ok(!/\p{L}/u.test(st.b)); // la punteggiatura è visibile da subito, le lettere no

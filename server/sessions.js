@@ -197,7 +197,7 @@ export class Manager {
     if (msg.t === 'spin' && s.ph !== 'q') res = G.finalSpin(s, conn.pid, this.rnd);
     else if (msg.t === 'spin') res = G.spinTurn(s, conn.pid, this.rnd);
     else if (msg.t === 'guess') res = G.guess(s, conn.pid, msg.l);
-    else res = G.solve(s, conn.pid, V.clean(msg.a, 36));
+    else res = G.solve(s, conn.pid, V.clean(msg.a, 80));
     if (res.err) return this.err(conn, 'bad_input', res.err);
     if (s.ph === 'wheel') this.save();
     if (s.ph === 'rev') { this.log(s.code, 'round_end', s.players.length); this.save(); }

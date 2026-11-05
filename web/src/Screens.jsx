@@ -180,7 +180,7 @@ export function Question({ st, tick, host, pid, up, onGuess, onSolve, onSpin, on
         <form className="panel solve" onSubmit={submit}>
           <label htmlFor="solve">Sai la frase? Prova a risolverla (se sbagli perdi il turno)</label>
           <div className="row">
-            <input id="solve" value={attempt} maxLength={36} autoComplete="off" onChange={(e) => setAttempt(e.target.value)} />
+            <input id="solve" value={attempt} maxLength={80} autoComplete="off" onChange={(e) => setAttempt(e.target.value)} />
             <button className="btn gold" type="submit" disabled={!up}>Risolvi</button>
           </div>
         </form>
